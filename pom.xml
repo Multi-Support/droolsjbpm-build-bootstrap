@@ -187,6 +187,8 @@
 
     <!-- Latest release to be used by api-compatibility-check to check backwards compat of the Kie API. -->
     <version.org.kie.latestFinal.release>6.4.0.Final</version.org.kie.latestFinal.release>
+
+    <version.org.mapdb>3.0.1</version.org.mapdb>
   </properties>
 
   <repositories>
@@ -1752,6 +1754,11 @@
         <version>${version.org.hibernate}</version>
       </dependency>
 
+      <dependency>
+        <groupId>org.mapdb</groupId>
+        <artifactId>mapdb</artifactId>
+        <version>${version.org.mapdb}</version>
+      </dependency>
     </dependencies>
 
   </dependencyManagement>
