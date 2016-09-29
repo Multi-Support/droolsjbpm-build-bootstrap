@@ -195,6 +195,7 @@
     <version.org.kie.latestFinal.release>6.4.0.Final</version.org.kie.latestFinal.release>
 
     <version.org.mapdb>3.0.2</version.org.mapdb>
+    <version.org.jetbrains.kotlin>1.0.2</version.org.jetbrains.kotlin>
   </properties>
 
   <repositories>
@@ -1768,6 +1769,11 @@
         <groupId>org.mapdb</groupId>
         <artifactId>mapdb</artifactId>
         <version>${version.org.mapdb}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jetbrains.kotlin</groupId>
+        <artifactId>kotlin-runtime</artifactId>
+        <version>${version.org.jetbrains.kotlin}</version>
       </dependency>
       <dependency>
           <groupId>net.bytebuddy</groupId>
