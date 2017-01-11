@@ -294,6 +294,8 @@ A pull request is like a patch file, but easier to apply, more powerful and you'
 
         * Or use the button *Merge* if there are no merge conflicts.
 
+If the change being proposed is affecting more than a single repository, it will require creating a pull request for each of the repositories being affected; in this case, it is required for the *topic branch* to share the same name across all pull requests, in order for the CI build tool to include the necessary dependencies while performing the build with the proposed change. It is also highly recommended to use the github *Autolinked references* in the pull request comments, in order to make these depedencies explicit and emphasized during code reviews.
+
 Building with Maven
 ===================
 
@@ -498,7 +500,7 @@ Any dependency used in any KIE project must fulfill these hard requirements:
 
         * Even test scope dependencies cannot use these licenses.
         
-    * To check the ALS compatibily license please visit these links:[Similarity in terms to the Apache License 2.0](http://www.apache.org/legal/resolved.html#category-a)&nbsp; 
+    * To check the ALS compatibility license please visit these links:[Similarity in terms to the Apache License 2.0](http://www.apache.org/legal/resolved.html#category-a)&nbsp; 
     [How should so-called "Weak Copyleft" Licenses be handled](http://www.apache.org/legal/resolved.html#category-b)
 
 * The dependency shall be **available in [Maven Central](http://search.maven.org/) or [JBoss Nexus](https://repository.jboss.org/nexus)**.
@@ -521,11 +523,11 @@ Any dependency used in any KIE project must fulfill these hard requirements:
 
         * Get that dependency into JBoss Nexus as a 3rd party library.
 
-* The dependency must be able to run on any **JVM 1.6 and higher**.
+* The dependency must be able to run on any **JVM 1.8 and higher**.
 
-    * It must be compiled for Java target 1.6 or lower (even if it's compiled with JDK 7 or JDK 8).
+    * It must be compiled for Java target 1.8 or lower (even if it's compiled with JDK 7 or JDK 8).
 
-    * It must not use any JDK APIs that were not yet available in Java 1.6.
+    * It must not use any JDK APIs that were not yet available in Java 1.8.
 
 * **Do not release the dependency yourself** (by building it from source).
 
@@ -540,13 +542,26 @@ Any dependency used in any KIE project must fulfill these hard requirements:
     * We don't expect you to check this manually:
     The victims enforcer plugin will automatically fail the build if a known bad dependency is used.
 
+* **The sources are publicly available**
+
+    * We may need to rebuild the dependency from sources ourselves in future. This may be in the rare case when
+      the dependency is no longer maintained, but we need to fix a specific CVE there. The other reason is that
+      productisation needs to be able to easily rebuild the dependency internally.
+
+    * Make sure the dependency's pom.xml contains link to the source repository (`scm` tag).
+
+* The dependency needs to use **reasonable build system**
+
+    * Since we may need to rebuild the dependency from sources, we also need to make sure it is easily buildable.
+      Maven or Gradle are acceptable as build systems.
+
 Any dependency used in any KIE project should fulfill these soft requirements:
 
 * Use dependencies that are **acceptable for the [jboss-integration-platform-bom](https://github.com/jboss-integration/jboss-integration-platform-bom)**.
 
-    * Do not override versions in `kie-parent-with-dependencies`'s `pom.xml` unless an exception is granted
+    * Do not override versions in `kie-parent`'s `pom.xml` unless an exception is granted
 
-        * If a newer version of the ip-bom already uses the new version, it's of course fine to do a temporarly overwrite in `kie-parent-with-dependencies`'s `pom.xml`.
+        * If a newer version of the ip-bom already uses the new version, it's of course fine to do a temporarily overwrite in `kie-parent`'s `pom.xml`.
 
 * **Prefer dependencies with the groupId `org.jboss.spec`** over those with the groupId `javax.*`.
 
@@ -1007,6 +1022,8 @@ Configuring IntelliJ
     * Restart, open menu *File*, menu item *Settings*
 
     * Click tree item *Code Style* and select it.
+
+        * Note: IntelliJ IDEA doesn't format your code automatically. You have to press Ctrl+Alt+L keyboard combination to trigger auto formatting when coding is done.
 
 * Set the correct file encoding (UTF-8 except for properties files) and end-of-line characters (unix):
 
