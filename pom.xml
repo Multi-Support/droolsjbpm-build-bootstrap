@@ -57,7 +57,7 @@
     <version.org.drools.droolsjbpm-tools>${version.org.drools}</version.org.drools.droolsjbpm-tools>
     <version.org.jbpm.jbpm-designer>${version.org.jbpm}</version.org.jbpm.jbpm-designer>
     <version.org.jbpm.jbpm-form-modeler>${version.org.jbpm}</version.org.jbpm.jbpm-form-modeler>
-    <version.org.jbpm.jbpm-console-ng>${version.org.jbpm}</version.org.jbpm.jbpm-console-ng>
+    <version.org.jbpm.jbpm-wb>${version.org.jbpm}</version.org.jbpm.jbpm-wb>
 
     <!-- CONVENTIONS:
            - A version property must be specified in the format "version.{groupId}", optionally with a suffix to make it unique.
@@ -84,8 +84,7 @@
     <version.net.sf.docbook.docbook-xsl>1.76.1</version.net.sf.docbook.docbook-xsl>
 
     <version.org.apache.xmlgraphics.commons>1.4</version.org.apache.xmlgraphics.commons>
-    <version.org.apache.xmlbeans>2.3.0</version.org.apache.xmlbeans>
-    <version.org.codehaus.cargo>1.5.0</version.org.codehaus.cargo>
+    <version.org.codehaus.cargo>1.6.2</version.org.codehaus.cargo>
     <version.org.jboss.arquillian.extension.drone>2.0.0.Final</version.org.jboss.arquillian.extension.drone>
     <version.org.jboss.arquillian.graphene>2.1.0.CR1</version.org.jboss.arquillian.graphene>
 
@@ -146,9 +145,18 @@
     <version.bundle.plugin>2.5.3</version.bundle.plugin>
     <!-- Surefire version 2.19.1 coming from parent is buggy and kie-osgi tests in droolsjbpm-integration are failing because of that. -->
     <version.surefire.plugin>2.18.1</version.surefire.plugin>
-
+    <!-- Jacoco plugin configurations -->
+    <jacoco.haltOnFailure>false</jacoco.haltOnFailure>
+    <jacoco.line.coveredratio.minimum>0.9</jacoco.line.coveredratio.minimum>
+    <version.jacoco.plugin>0.7.5.201505241946</version.jacoco.plugin>
+    <!-- findbugs-maven-plugin 3.0.3- does not support Maven 3.4+ -->
+    <version.findbugs.plugin>3.0.4</version.findbugs.plugin>
     <!-- TODO: remove this once all repositories comply to the defined checkstyle rules -->
     <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
+    <!-- TODO: remove this once all repositories/modules are fixed and do not contain duplicated classes -->
+    <enforcer.failOnDuplicatedClasses>false</enforcer.failOnDuplicatedClasses>
+    <!-- Set to "true" on every project that has no violations. -->
+    <findbugs.failOnViolation>false</findbugs.failOnViolation>
     <!-- org.eclipse.tycho plugin version -->
     <version.org.eclipse.tycho>0.24.0</version.org.eclipse.tycho>
     <version.org.jboss.tools.tycho-plugins>0.23.1</version.org.jboss.tools.tycho-plugins>
@@ -166,6 +174,9 @@
     <!-- Version of the KIE Workbench application. Shown for example in About dialog. Will be usually overridden by productisation. -->
     <version.org.kie.workbench.app>${version.org.kie}</version.org.kie.workbench.app>
 
+    <!-- TODO: remove the Weld + Weld API override once we upgrade to IP BOM 7.0.0.CR7+-->
+    <version.org.jboss.weld.weld>2.4.1.Final</version.org.jboss.weld.weld>
+    <version.org.jboss.weld.weld-api>2.4.Final</version.org.jboss.weld.weld-api>
     <version.org.wildfly.swarm>2016.9</version.org.wildfly.swarm>
     <version.net.byte-buddy>1.4.16</version.net.byte-buddy>
     <version.commons-beanutils>1.9.2</version.commons-beanutils>
@@ -179,12 +190,16 @@
     <jboss.snapshots.repo.url>https://origin-repository.jboss.org/nexus/content/repositories/snapshots/</jboss.snapshots.repo.url>
 
     <!-- Latest release to be used by api-compatibility-check to check backwards compatibility of the Kie API. -->
-    <version.org.kie.latestFinal.release>6.4.0.Final</version.org.kie.latestFinal.release>
+    <version.org.kie.latestFinal.release>6.5.0.Final</version.org.kie.latestFinal.release>
 
     <version.org.mapdb>3.0.2</version.org.mapdb>
     <version.org.jetbrains.kotlin>1.0.2</version.org.jetbrains.kotlin>
     <!-- using undertow for kie server router - same version as it comes with WildFly 10.0.0.Final-->
     <version.io.undertow.core>1.3.15.Final</version.io.undertow.core>
+
+    <!-- Overrides the version in the jboss-integration-platform-bom. A peer PR will be sent to jboss-integration-platform project.
+         Please move this new version number there when possible -->
+    <version.org.jboss.forge.roaster>2.19.4.Final</version.org.jboss.forge.roaster>
   </properties>
 
   <repositories>
@@ -278,6 +293,13 @@
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-enforcer-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>extra-enforcer-rules</artifactId>
+              <version>1.0-beta-6</version>
+            </dependency>
+          </dependencies>
           <executions>
             <execution>
               <id>enforce-plugin-versions</id>
@@ -316,10 +338,10 @@
             </execution>
             <execution>
               <id>ban-blacklisted-dependencies</id>
+              <phase>validate</phase>
               <goals>
                 <goal>enforce</goal>
               </goals>
-              <phase>validate</phase>
               <configuration>
                 <rules>
                   <bannedDependencies>
@@ -334,6 +356,60 @@
                     </excludes>
                   </bannedDependencies>
                 </rules>
+                <fail>true</fail>
+              </configuration>
+            </execution>
+            <execution>
+              <id>ban-duplicated-classes</id>
+              <!-- Using phase=none as we don't want this execution as part of the default build. The phase
+                   is specified in the "full" profile and thus the execution will only be activated when using that profile. -->
+              <phase>none</phase>
+              <goals>
+                <goal>enforce</goal>
+              </goals>
+              <configuration>
+                <rules>
+                  <banDuplicateClasses>
+                    <ignoreClasses>
+                      <!-- Duplicated by XStream's transitive deps, with very little chance to get properly fixed -->
+                      <ignoreClass>org.xmlpull.v1.XmlPullParserException</ignoreClass>
+                      <ignoreClass>org.xmlpull.v1.XmlPullParser</ignoreClass>
+                      <!-- Bundled by both com.sun:tools and com.sun.xml.bind:jaxb-xjc. No easy way to exclude one of them. -->
+                      <ignoreClass>org.relaxng.datatype.*</ignoreClass>
+                      <!-- Classes duplicated by the jar itself (bug), see https://issues.apache.org.jira/browse/XMLBEANS-499 -->
+                      <ignoreClass>org.apache.xmlbeans.xml.stream.XMLName</ignoreClass>
+                      <ignoreClass>org.apache.xmlbeans.xml.stream.XMLInputStream</ignoreClass>
+                      <ignoreClass>org.apache.xmlbeans.xml.stream.utils.NestedThrowable</ignoreClass>
+                      <ignoreClass>org.apache.xmlbeans.xml.stream.utils.NestedThrowable$Util</ignoreClass>
+                      <ignoreClass>org.apache.xmlbeans.xml.stream.XMLStreamException</ignoreClass>
+                      <ignoreClass>org.apache.xmlbeans.xml.stream.ReferenceResolver</ignoreClass>
+                      <ignoreClass>org.apache.xmlbeans.xml.stream.XMLEvent</ignoreClass>
+                      <ignoreClass>org.apache.xmlbeans.xml.stream.Location</ignoreClass>
+                      <!-- Duplicated in xml-apis:xml-apis:jar:1.4.01 and xerces:xercesImpl:jar:2.11.0.SP4. The class is identical
+                           and there is very little chance this will get ever fixed. -->
+                      <ignoreClass>org.w3c.dom.ElementTraversal</ignoreClass>
+                      <ignoreClass>org.w3c.dom.UserDataHandler</ignoreClass>
+                      <!-- Packaged both in hornetq-commons and hornetq-client. Remove this once we move the testing
+                           from HornetQ to ActiveMQ (https://issues.jboss.org/browse/JBPM-5503) -->
+                      <ignoreClass>org.hornetq.utils.HornetQUtilBundle_$bundle</ignoreClass>
+                      <ignoreClass>org.hornetq.utils.HornetQUtilLogger_$logger</ignoreClass>
+                      <!-- Classes bundled in errai-javax-enterprise which are GWT friendly.
+                           See https://github.com/errai/errai/blob/master/errai-javax-enterprise/README -->
+                      <ignoreClass>javax.interceptor.InvocationContext</ignoreClass>
+                      <ignoreClass>javax.inject.Provider</ignoreClass>
+                      <ignoreClass>javax.inject.Named</ignoreClass>
+                      <ignoreClass>javax.inject.Scope</ignoreClass>
+                      <ignoreClass>javax.inject.Qualifier</ignoreClass>
+                      <ignoreClass>javax.inject.Singleton</ignoreClass>
+                      <ignoreClass>javax.enterprise.*</ignoreClass>
+                      <!-- Classes from gwt-user duplicated in errai-uibinder -->
+                      <ignoreClass>com.google.gwt.uibinder.rebind.UiBinderWriter</ignoreClass>
+                      <ignoreClass>com.google.gwt.uibinder.rebind.UiBinderGenerator</ignoreClass>
+                    </ignoreClasses>
+                    <findAllDuplicates>true</findAllDuplicates>
+                  </banDuplicateClasses>
+                </rules>
+                <fail>${enforcer.failOnDuplicatedClasses}</fail>
               </configuration>
             </execution>
           </executions>
@@ -356,6 +432,26 @@
                       <property name="severity" value="error"/>
                       <property name="eachLine" value="true"/>
                     </module>
+                    <module name="TreeWalker">
+                      <!-- Import settings: getting rid of redundant import, forbid star notation, defined order of imports. -->
+                      <module name="RedundantImport"/>
+                      <module name="AvoidStarImport">
+                        <property name="excludes" value="org.junit.Assert,org.assertj.core.api.Assertions,org.mockito.Mockito"/>
+                        <property name="allowClassImports" value="false"/>
+                        <property name="allowStaticMemberImports" value="false"/>
+                      </module>
+                      <module name="CustomImportOrder">
+                        <property name="customImportOrderRules"
+                                  value="STANDARD_JAVA_PACKAGE###THIRD_PARTY_PACKAGE###STATIC"/>
+                        <property name="sortImportsInGroupAlphabetically" value="true"/>
+                        <property name="separateLineBetweenGroups" value="true"/>
+                      </module>
+
+                      <module name="NeedBraces">
+                        <property name="tokens" value="LITERAL_IF, LITERAL_ELSE, LITERAL_FOR, LITERAL_WHILE, LITERAL_DO"/>
+                      </module>
+                      <module name="EqualsHashCode"/>
+                    </module>
                   </module>
                 </checkstyleRules>
                 <outputFile>${project.build.directory}/checkstyle.log</outputFile>
@@ -370,25 +466,53 @@
           </executions>
         </plugin>
         <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <configuration>
-            <!-- Forking temporarily enabled as it seems to workaround the wrong behavior of UF annotation processor, resulting
-                 in corrupted perspective definitions, etc. This needs to fixed directly in UF and the forking disabled again. -->
-            <fork>true</fork>
-          </configuration>
-        </plugin>
-        <plugin>
           <groupId>org.revapi</groupId>
           <artifactId>revapi-maven-plugin</artifactId>
-          <version>0.6.1</version>
+          <version>0.8.1</version>
           <dependencies>
             <dependency>
               <groupId>org.revapi</groupId>
               <artifactId>revapi-java</artifactId>
-              <version>0.10.2</version>
+              <version>0.13.1</version>
             </dependency>
           </dependencies>
+          <configuration>
+            <oldArtifacts>
+              <artifact>${project.groupId}:${project.artifactId}:${version.org.kie.latestFinal.release}</artifact>
+            </oldArtifacts>
+            <!-- By default revapi will check the oldArtifact against the currently executed build -->
+            <analysisConfigurationFiles>
+              <configurationFile>
+                <path>src/build/revapi-config.json</path>
+              </configurationFile>
+            </analysisConfigurationFiles>
+            <!-- By default, revapi will only fail the build if there are potentially breaking or breaking changes. However, in the report
+                 we want even non breaking changes to be present. -->
+            <reportSeverity>nonBreaking</reportSeverity>
+            <failSeverity>potentiallyBreaking</failSeverity>
+          </configuration>
+          <!-- Running two executions is a workaround to make sure we get a HTML report in case revapi finds
+               some incompatible changes. The "check" goal will simply fail the whole build before it could get
+               to the report. To make sure we always get a HTML report, the "report" goal needs to be executed
+               before the "check" goal.
+               Once https://github.com/revapi/revapi/issues/11 is fixed it should be possible to use single execution. -->
+          <executions>
+            <execution>
+              <id>check</id>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <phase>verify</phase>
+            </execution>
+            <execution>
+              <!-- report can be found in ${build.directory}/site/revapi-report.html -->
+              <id>report</id>
+              <goals>
+                <goal>report</goal>
+              </goals>
+              <phase>package</phase>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <artifactId>maven-antrun-plugin</artifactId>
@@ -473,7 +597,7 @@
         <plugin>
           <groupId>org.jacoco</groupId>
           <artifactId>jacoco-maven-plugin</artifactId>
-          <version>0.7.5.201505241946</version>
+          <version>${version.jacoco.plugin}</version>
           <executions>
             <execution>
               <id>default-prepare-agent</id>
@@ -497,8 +621,7 @@
                 <goal>check</goal>
               </goals>
               <configuration>
-                <!-- Do not fail the build if rules are not met -->
-                <haltOnFailure>false</haltOnFailure>
+                <haltOnFailure>${jacoco.haltOnFailure}</haltOnFailure>
                 <rules>
                   <rule>
                     <element>BUNDLE</element>
@@ -506,7 +629,7 @@
                       <limit>
                         <counter>LINE</counter>
                         <value>COVEREDRATIO</value>
-                        <minimum>0.9</minimum>
+                        <minimum>${jacoco.line.coveredratio.minimum}</minimum>
                       </limit>
                     </limits>
                   </rule>
@@ -729,6 +852,11 @@
           <version>1.0-beta-1</version>
         </plugin>
         <plugin>
+          <groupId>com.coderplus.maven.plugins</groupId>
+          <artifactId>copy-rename-maven-plugin</artifactId>
+          <version>1.0</version>
+        </plugin>
+        <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-assembly-plugin</artifactId>
           <dependencies>
@@ -934,6 +1062,29 @@
             </lifecycleMappingMetadata>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>org.wildfly.swarm</groupId>
+          <artifactId>wildfly-swarm-plugin</artifactId>
+          <version>${version.org.wildfly.swarm}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>findbugs-maven-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <groupId>org.kie</groupId>
+              <artifactId>kie-build-tools</artifactId>
+              <version>${version.org.kie}</version>
+            </dependency>
+          </dependencies>
+          <configuration>
+            <maxRank>6</maxRank>
+            <effort>Max</effort>
+            <xmlOutput>true</xmlOutput>
+            <failOnError>${findbugs.failOnViolation}</failOnError>
+            <excludeFilterFile>findbugs-excludes.xml</excludeFilterFile>
+          </configuration>
+        </plugin>
       </plugins>
     </pluginManagement>
 
@@ -1020,8 +1171,6 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
-        <!-- Keep in sync with <build><plugins> -->
-        <version>2.5.5</version>
       </plugin>
     </plugins>
   </reporting>
@@ -1067,12 +1216,37 @@
         <plugins>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-enforcer-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>ban-duplicated-classes</id>
+                <!-- The execution's configuration is part of the pluginManagement. This piece here only makes sure the
+                     execution is enabled (by specifying a phase) for full profile builds. -->
+                <phase>validate</phase>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
             <executions>
               <execution>
                 <phase>package</phase>
                 <goals>
                   <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>findbugs-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>findbugs-check</id>
+                <phase>compile</phase>
+                <goals>
+                  <goal>check</goal>
                 </goals>
               </execution>
             </executions>
@@ -1161,6 +1335,7 @@
   </profiles>
 
   <modules>
+    <module>kie-build-tools</module>
     <module>kie-user-bom-parent</module>
     <module>kie-bom</module>
     <module>drools-bom</module>
@@ -1169,6 +1344,7 @@
     <module>kie-uberfire-extensions-bom</module>
     <module>guvnor-bom</module>
     <module>kie-platform-bom</module>
+    <module>kie-dmn-bom</module>
   </modules>
 
   <dependencyManagement>
@@ -1194,6 +1370,7 @@
       <dependency>
         <groupId>org.apache.pdfbox</groupId>
         <artifactId>pdfbox</artifactId>
+        <version>${version.org.apache.pdfbox}</version>
         <exclusions>
           <exclusion>
             <groupId>commons-logging</groupId>
@@ -1201,7 +1378,7 @@
           </exclusion>
         </exclusions>
       </dependency>
-      
+
       <!-- TODO BZ-996210 use org.apache.xmlgraphics:batik* instead -->
       <dependency>
         <groupId>batik</groupId>
@@ -1317,6 +1494,19 @@
       </dependency>
 
       <dependency>
+        <groupId>com.google.gwt.gwtmockito</groupId>
+        <artifactId>gwtmockito</artifactId>
+        <version>${version.com.google.gwt.gwtmockito}</version>
+        <exclusions>
+          <exclusion>
+            <!-- Collides with 'org.jboss.spec.javax.el:jboss-el-api_3.0_spec' -->
+            <groupId>org.mortbay.jasper</groupId>
+            <artifactId>apache-el</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
         <groupId>com.unboundid</groupId>
         <artifactId>unboundid-ldapsdk</artifactId>
         <version>${version.com.unboundid}</version>
@@ -1360,12 +1550,6 @@
         <groupId>org.apache.xmlgraphics</groupId>
         <artifactId>xmlgraphics-commons</artifactId>
         <version>${version.org.apache.xmlgraphics.commons}</version>
-      </dependency>
-
-      <dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-proxy</artifactId>
-        <version>${version.org.eclipse.jetty}</version>
       </dependency>
 
       <dependency>
@@ -1683,6 +1867,32 @@
         <scope>test</scope>
       </dependency>
 
+      <dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-core</artifactId>
+        <version>${version.org.hibernate}</version>
+        <exclusions>
+          <exclusion>
+            <!-- We generally use JBoss Spec JARs. Instead of the Geronimo one use
+                 'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec'. -->
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-jta_1.1_spec</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.hibernate</groupId>
+        <artifactId>hibernate-entitymanager</artifactId>
+        <version>${version.org.hibernate}</version>
+        <exclusions>
+          <exclusion>
+            <!-- We generally use JBoss Spec JARs. Instead of the Geronimo one use
+                 'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec'. -->
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-jta_1.1_spec</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
       <!-- Required for Errai Dynamic Bean validation  -->
       <dependency>
         <groupId>org.hibernate</groupId>

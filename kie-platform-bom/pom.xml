@@ -83,6 +83,13 @@
         <version>${version.org.dashbuilder}</version>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>org.kie</groupId>
+        <artifactId>kie-dmn-bom</artifactId>
+        <type>pom</type>
+        <version>${version.org.kie}</version>
+        <scope>import</scope>
+      </dependency>
 
       <dependency>
         <groupId>org.uberfire</groupId>
@@ -98,7 +105,6 @@
         <version>${version.org.jboss.errai}</version>
         <scope>import</scope>
       </dependency>
-
       <dependency>
         <groupId>org.asciidoctor</groupId>
         <artifactId>asciidoctorj-pdf</artifactId>

@@ -385,6 +385,13 @@
         <classifier>sources</classifier>
       </dependency>
 
+      <!-- KIE Workbench Playground Repository -->
+      <dependency>
+        <groupId>org.kie.workbench.playground</groupId>
+        <artifactId>playground-parent</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+
       <!--KIE Common - Core Services -->
       <dependency>
         <groupId>org.kie.workbench.services</groupId>
@@ -1141,9 +1148,69 @@
       </dependency>
       <dependency>
         <groupId>org.kie.workbench.forms</groupId>
-        <artifactId>kie-wb-common-forms-api</artifactId>
+        <artifactId>kie-wb-common-forms-fields</artifactId>
         <version>${version.org.kie}</version>
-        <classifier>tests</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.workbench.forms</groupId>
+        <artifactId>kie-wb-common-forms-fields</artifactId>
+        <version>${version.org.kie}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.workbench.forms</groupId>
+        <artifactId>kie-wb-common-forms-fields</artifactId>
+        <version>${version.org.kie}</version>
+        <type>test-jar</type>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.workbench.forms</groupId>
+        <artifactId>kie-wb-common-forms-adf-base</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.workbench.forms</groupId>
+        <artifactId>kie-wb-common-forms-adf-base</artifactId>
+        <version>${version.org.kie}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.workbench.forms</groupId>
+        <artifactId>kie-wb-common-forms-adf-engine-api</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.workbench.forms</groupId>
+        <artifactId>kie-wb-common-forms-adf-engine-api</artifactId>
+        <version>${version.org.kie}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.workbench.forms</groupId>
+        <artifactId>kie-wb-common-forms-adf-engine-api</artifactId>
+        <version>${version.org.kie}</version>
+        <type>test-jar</type>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.workbench.forms</groupId>
+        <artifactId>kie-wb-common-forms-adf-engine-backend</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.workbench.forms</groupId>
+        <artifactId>kie-wb-common-forms-adf-engine-client</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.workbench.forms</groupId>
+        <artifactId>kie-wb-common-forms-adf-engine-client</artifactId>
+        <version>${version.org.kie}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.workbench.forms</groupId>
+        <artifactId>kie-wb-common-forms-adf-processors</artifactId>
+        <version>${version.org.kie}</version>
       </dependency>
       <dependency>
         <groupId>org.kie.workbench.forms</groupId>
@@ -1165,7 +1232,7 @@
         <groupId>org.kie.workbench.forms</groupId>
         <artifactId>kie-wb-common-dynamic-forms-api</artifactId>
         <version>${version.org.kie}</version>
-        <classifier>tests</classifier>
+        <type>test-jar</type>
       </dependency>
       <dependency>
         <groupId>org.kie.workbench.forms</groupId>
@@ -1214,7 +1281,7 @@
         <groupId>org.kie.workbench.forms</groupId>
         <artifactId>kie-wb-common-forms-crud-component</artifactId>
         <version>${version.org.kie}</version>
-        <classifier>tests</classifier>
+        <type>test-jar</type>
       </dependency>
       <dependency>
         <groupId>org.kie.workbench.forms</groupId>
@@ -1735,6 +1802,32 @@
         <classifier>sources</classifier>
       </dependency>
 
+      <dependency>
+        <groupId>org.kie.workbench.stunner</groupId>
+        <artifactId>kie-wb-common-stunner-case-mgmt-project-api</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kie.workbench.stunner</groupId>
+        <artifactId>kie-wb-common-stunner-case-mgmt-project-api</artifactId>
+        <version>${version.org.kie}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kie.workbench.stunner</groupId>
+        <artifactId>kie-wb-common-stunner-case-mgmt-project-client</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kie.workbench.stunner</groupId>
+        <artifactId>kie-wb-common-stunner-case-mgmt-project-client</artifactId>
+        <version>${version.org.kie}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
       <!-- Stunner Showcases.-->
 
       <dependency>
@@ -1801,14 +1894,14 @@
         <groupId>org.kie</groupId>
         <artifactId>kie-drools-wb-distribution-wars</artifactId>
         <version>${version.org.kie}</version>
-        <classifier>eap6_4</classifier>
+        <classifier>eap7</classifier>
         <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.kie</groupId>
         <artifactId>kie-drools-wb-distribution-wars</artifactId>
         <version>${version.org.kie}</version>
-        <classifier>tomcat7</classifier>
+        <classifier>tomcat8</classifier>
         <type>war</type>
       </dependency>
       <dependency>
@@ -1838,14 +1931,14 @@
         <groupId>org.kie</groupId>
         <artifactId>kie-wb-distribution-wars</artifactId>
         <version>${version.org.kie}</version>
-        <classifier>eap6_4</classifier>
+        <classifier>eap7</classifier>
         <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.kie</groupId>
         <artifactId>kie-wb-distribution-wars</artifactId>
         <version>${version.org.kie}</version>
-        <classifier>tomcat7</classifier>
+        <classifier>tomcat8</classifier>
         <type>war</type>
       </dependency>
       <dependency>
