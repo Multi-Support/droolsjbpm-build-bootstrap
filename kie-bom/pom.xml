@@ -164,6 +164,17 @@
       </dependency>
       <dependency>
         <groupId>org.kie.server</groupId>
+        <artifactId>kie-server-services-dmn</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.server</groupId>
+        <artifactId>kie-server-services-dmn</artifactId>
+        <version>${version.org.kie}</version>
+        <classifier>sources</classifier>
+      </dependency>      
+      <dependency>
+        <groupId>org.kie.server</groupId>
         <artifactId>kie-server-services-jbpm</artifactId>
         <version>${version.org.kie}</version>
       </dependency>
@@ -236,6 +247,17 @@
       <dependency>
         <groupId>org.kie.server</groupId>
         <artifactId>kie-server-rest-optaplanner</artifactId>
+        <version>${version.org.kie}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.server</groupId>
+        <artifactId>kie-server-rest-dmn</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.server</groupId>
+        <artifactId>kie-server-rest-dmn</artifactId>
         <version>${version.org.kie}</version>
         <classifier>sources</classifier>
       </dependency>
@@ -1577,6 +1599,32 @@
         <classifier>sources</classifier>
       </dependency>
 
+      <dependency>
+        <groupId>org.kie.workbench.stunner</groupId>
+        <artifactId>kie-wb-common-stunner-svg-gen</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kie.workbench.stunner</groupId>
+        <artifactId>kie-wb-common-stunner-svg-gen</artifactId>
+        <version>${version.org.kie}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kie.workbench.stunner</groupId>
+        <artifactId>kie-wb-common-stunner-svg-client</artifactId>
+        <version>${version.org.kie}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kie.workbench.stunner</groupId>
+        <artifactId>kie-wb-common-stunner-svg-client</artifactId>
+        <version>${version.org.kie}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
       <!-- Stunner - Backend -->
 
       <dependency>
@@ -1885,35 +1933,35 @@
       <!-- kie-drools-wb distribution wars -->
       <dependency>
         <groupId>org.kie</groupId>
-        <artifactId>kie-drools-wb-distribution-wars</artifactId>
+        <artifactId>kie-drools-wb</artifactId>
         <version>${version.org.kie}</version>
         <classifier>wildfly10</classifier>
         <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.kie</groupId>
-        <artifactId>kie-drools-wb-distribution-wars</artifactId>
+        <artifactId>kie-drools-wb</artifactId>
         <version>${version.org.kie}</version>
         <classifier>eap7</classifier>
         <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.kie</groupId>
-        <artifactId>kie-drools-wb-distribution-wars</artifactId>
+        <artifactId>kie-drools-wb</artifactId>
         <version>${version.org.kie}</version>
         <classifier>tomcat8</classifier>
         <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.kie</groupId>
-        <artifactId>kie-drools-wb-distribution-wars</artifactId>
+        <artifactId>kie-drools-wb</artifactId>
         <version>${version.org.kie}</version>
         <classifier>was8</classifier>
         <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.kie</groupId>
-        <artifactId>kie-drools-wb-distribution-wars</artifactId>
+        <artifactId>kie-drools-wb</artifactId>
         <version>${version.org.kie}</version>
         <classifier>weblogic12</classifier>
         <type>war</type>
@@ -1922,35 +1970,35 @@
       <!-- kie-wb distribution wars -->
       <dependency>
         <groupId>org.kie</groupId>
-        <artifactId>kie-wb-distribution-wars</artifactId>
+        <artifactId>kie-wb</artifactId>
         <version>${version.org.kie}</version>
         <classifier>wildfly10</classifier>
         <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.kie</groupId>
-        <artifactId>kie-wb-distribution-wars</artifactId>
+        <artifactId>kie-wb</artifactId>
         <version>${version.org.kie}</version>
         <classifier>eap7</classifier>
         <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.kie</groupId>
-        <artifactId>kie-wb-distribution-wars</artifactId>
+        <artifactId>kie-wb</artifactId>
         <version>${version.org.kie}</version>
         <classifier>tomcat8</classifier>
         <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.kie</groupId>
-        <artifactId>kie-wb-distribution-wars</artifactId>
+        <artifactId>kie-wb</artifactId>
         <version>${version.org.kie}</version>
         <classifier>was8</classifier>
         <type>war</type>
       </dependency>
       <dependency>
         <groupId>org.kie</groupId>
-        <artifactId>kie-wb-distribution-wars</artifactId>
+        <artifactId>kie-wb</artifactId>
         <version>${version.org.kie}</version>
         <classifier>weblogic12</classifier>
         <type>war</type>

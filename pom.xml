@@ -8,7 +8,7 @@
     <groupId>org.jboss.integration-platform</groupId>
     <artifactId>jboss-integration-platform-bom</artifactId>
     <!-- Keep in sync with ip-parent version in kie-user-bom-parent/pom.xml -->
-    <version>7.0.0.CR6</version>
+    <version>7.0.0.CR8</version>
   </parent>
 
   <groupId>org.kie</groupId>
@@ -83,6 +83,7 @@
     <version.link.bek.tools.issue-keeper-junit>4.11.1</version.link.bek.tools.issue-keeper-junit>
     <version.net.sf.docbook.docbook-xsl>1.76.1</version.net.sf.docbook.docbook-xsl>
 
+    <version.org.antlr4>4.5.3</version.org.antlr4>
     <version.org.apache.xmlgraphics.commons>1.4</version.org.apache.xmlgraphics.commons>
     <version.org.codehaus.cargo>1.6.2</version.org.codehaus.cargo>
     <version.org.jboss.arquillian.extension.drone>2.0.0.Final</version.org.jboss.arquillian.extension.drone>
@@ -127,6 +128,13 @@
     <version.org.hibernate.hibernate-validator>4.1.0.Final</version.org.hibernate.hibernate-validator>
     <version.javax.validation>1.0.0.GA</version.javax.validation>
 
+    <!-- Lienzo core upgrade required by Stunner. Can be removed once IP BOM is upgraded.-->
+    <version.com.ahome-it.lienzo-core>2.0.284-RELEASE</version.com.ahome-it.lienzo-core>
+
+    <!-- CSS parsing library from Apache used by Stunner. -->
+    <version.net.sourceforge.cssparser>0.9.21</version.net.sourceforge.cssparser>
+    <version.org.w3c.css.sac>1.3</version.org.w3c.css.sac>
+
     <!-- In community builds productized is false, in product builds it's true to enable branding changes -->
     <org.kie.productized>false</org.kie.productized>
 
@@ -139,18 +147,12 @@
 
     <!-- Plugin version overrides.
          IMPORTANT: always explain the reason for overriding the plugin version! -->
-    <!-- Override version 2.5.4 coming from jboss-parent as it forks executions, which is a bug.
-         See https://issues.apache.org/jira/browse/FELIX-4882 for more details.
-         Version 3.x requires Java 7 (not directly, but one of transitive deps does). -->
-    <version.bundle.plugin>2.5.3</version.bundle.plugin>
     <!-- Surefire version 2.19.1 coming from parent is buggy and kie-osgi tests in droolsjbpm-integration are failing because of that. -->
     <version.surefire.plugin>2.18.1</version.surefire.plugin>
     <!-- Jacoco plugin configurations -->
     <jacoco.haltOnFailure>false</jacoco.haltOnFailure>
     <jacoco.line.coveredratio.minimum>0.9</jacoco.line.coveredratio.minimum>
     <version.jacoco.plugin>0.7.5.201505241946</version.jacoco.plugin>
-    <!-- findbugs-maven-plugin 3.0.3- does not support Maven 3.4+ -->
-    <version.findbugs.plugin>3.0.4</version.findbugs.plugin>
     <!-- TODO: remove this once all repositories comply to the defined checkstyle rules -->
     <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
     <!-- TODO: remove this once all repositories/modules are fixed and do not contain duplicated classes -->
@@ -174,9 +176,6 @@
     <!-- Version of the KIE Workbench application. Shown for example in About dialog. Will be usually overridden by productisation. -->
     <version.org.kie.workbench.app>${version.org.kie}</version.org.kie.workbench.app>
 
-    <!-- TODO: remove the Weld + Weld API override once we upgrade to IP BOM 7.0.0.CR7+-->
-    <version.org.jboss.weld.weld>2.4.1.Final</version.org.jboss.weld.weld>
-    <version.org.jboss.weld.weld-api>2.4.Final</version.org.jboss.weld.weld-api>
     <version.org.wildfly.swarm>2016.9</version.org.wildfly.swarm>
     <version.net.byte-buddy>1.4.16</version.net.byte-buddy>
     <version.commons-beanutils>1.9.2</version.commons-beanutils>
@@ -191,6 +190,8 @@
 
     <!-- Latest release to be used by api-compatibility-check to check backwards compatibility of the Kie API. -->
     <version.org.kie.latestFinal.release>6.5.0.Final</version.org.kie.latestFinal.release>
+    <revapi.oldKieVersion>${version.org.kie.latestFinal.release}</revapi.oldKieVersion>
+    <revapi.newKieVersion>${project.version}</revapi.newKieVersion>
 
     <!-- using undertow for kie server router - same version as it comes with WildFly 10.0.0.Final-->
     <version.io.undertow.core>1.3.15.Final</version.io.undertow.core>
@@ -400,10 +401,46 @@
                       <ignoreClass>javax.inject.Qualifier</ignoreClass>
                       <ignoreClass>javax.inject.Singleton</ignoreClass>
                       <ignoreClass>javax.enterprise.*</ignoreClass>
+                      <!-- Servlet API is bundled in way too many different dependencies, causing nightmares trying to
+                           properly exclude everything. There were no real issues with this so far as mostly the APIs
+                           are just duplicates of the exactly same sources. In ideal world, this get eventually fixed,
+                           but it may very well not be worth the effort. -->
+                      <ignoreClass>javax.servlet.*</ignoreClass>
+                      <!-- Classes in javax.annotation package are just marker annotations used to aid the programmers.
+                           These annotations do not influence the actual behavior of the code, so it's reasonable to
+                           ignore them. Following dependencies contain these classes: 'com.google.code.findbugs:jsr305'
+                           and 'com.google.code.findbugs:annotations'. -->
+                      <ignoreClass>javax.annotation.*</ignoreClass>
+                      <!-- Exactly the same case as for above 'javax.annotation.*' classes. Following dependencies contain
+                           these classes: 'net.jcip:jcip-annotations' and 'com.google.code.findbugs:annotations'. -->
+                      <ignoreClass>net.jcip.annotations.*</ignoreClass>
                       <!-- Classes from gwt-user duplicated in errai-uibinder -->
                       <ignoreClass>com.google.gwt.uibinder.rebind.UiBinderWriter</ignoreClass>
                       <ignoreClass>com.google.gwt.uibinder.rebind.UiBinderGenerator</ignoreClass>
                     </ignoreClasses>
+                    <dependencies>
+                      <!-- gwt-dev bundles dozens of different 3rd party dependencies, but can not be usually excluded
+                           as e.g. GWT Mockito tests are using the com.google.gwt classes inside. Ignoring it for the
+                           duplicate classes check seems to be the only way. -->
+                      <dependency>
+                        <groupId>com.google.gwt</groupId>
+                        <artifactId>gwt-dev</artifactId>
+                        <type>jar</type>
+                        <ignoreClasses>
+                          <ignoreClass>*</ignoreClass>
+                        </ignoreClasses>
+                      </dependency>
+                      <dependency>
+                        <groupId>org.elasticsearch</groupId>
+                        <artifactId>elasticsearch</artifactId>
+                        <ignoreClasses>
+                          <!-- Elasticsearch team claims they fixed performance issues in the class and re-bundled it.
+                               See https://discuss.elastic.co/t/an-unshaded-joda-time-classes-in-elasticsearch-2-1-1-jar/38943
+                               Nothing we can do here. -->
+                          <ignoreClass>org.joda.time.base.BaseDateTime</ignoreClass>
+                        </ignoreClasses>
+                      </dependency>
+                    </dependencies>
                     <findAllDuplicates>true</findAllDuplicates>
                   </banDuplicateClasses>
                 </rules>
@@ -476,12 +513,19 @@
           </dependencies>
           <configuration>
             <oldArtifacts>
-              <artifact>${project.groupId}:${project.artifactId}:${version.org.kie.latestFinal.release}</artifact>
+              <artifact>${project.groupId}:${project.artifactId}:${revapi.oldKieVersion}</artifact>
             </oldArtifacts>
+            <newArtifacts>
+              <artifact>${project.groupId}:${project.artifactId}:${revapi.newKieVersion}</artifact>
+            </newArtifacts>
             <!-- By default revapi will check the oldArtifact against the currently executed build -->
             <analysisConfigurationFiles>
               <configurationFile>
                 <path>src/build/revapi-config.json</path>
+                <roots>
+                  <root>filters</root>
+                  <root>ignores</root>
+                </roots>
               </configurationFile>
             </analysisConfigurationFiles>
             <!-- By default, revapi will only fail the build if there are potentially breaking or breaking changes. However, in the report
@@ -598,13 +642,16 @@
           <version>${version.jacoco.plugin}</version>
           <executions>
             <execution>
-              <id>default-prepare-agent</id>
+              <id>default-instrument</id>
               <goals>
-                <goal>prepare-agent</goal>
+                <goal>instrument</goal>
               </goals>
-              <configuration>
-                <propertyName>surefire.argLine</propertyName>
-              </configuration>
+            </execution>
+            <execution>
+              <id>default-restore-instrumented-classes</id>
+              <goals>
+                <goal>restore-instrumented-classes</goal>
+              </goals>
             </execution>
             <execution>
               <id>default-report</id>
@@ -1182,6 +1229,14 @@
           <name>code-coverage</name>
         </property>
       </activation>
+      <dependencies>
+        <dependency>
+            <groupId>org.jacoco</groupId>
+            <artifactId>org.jacoco.agent</artifactId>
+            <classifier>runtime</classifier>
+            <scope>test</scope>
+        </dependency>
+      </dependencies>
       <build>
         <pluginManagement>
           <plugins>
@@ -1189,8 +1244,9 @@
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-surefire-plugin</artifactId>
               <configuration>
-                <!-- Append surefire.argLine property populated by JaCoCo plugin -->
-                <argLine>-Xmx1024m -Dfile.encoding=UTF-8 @{surefire.argLine}</argLine>
+                <systemPropertyVariables>
+                  <jacoco-agent.destfile>target/jacoco.exec</jacoco-agent.destfile>
+                </systemPropertyVariables>
               </configuration>
             </plugin>
           </plugins>
@@ -1201,6 +1257,49 @@
             <artifactId>jacoco-maven-plugin</artifactId>
           </plugin>
         </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>generate-revapi-report</id>
+      <!-- There is no need to run tests when generating the report -->
+      <properties>
+        <skipTests>true</skipTests>
+      </properties>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.revapi</groupId>
+              <artifactId>revapi-maven-plugin</artifactId>
+              <configuration>
+                <analysisConfigurationFiles>
+                  <configurationFile>
+                    <!-- Only filters should be taken into account, not ignores -->
+                    <roots>
+                      <root>filters</root>
+                    </roots>
+                  </configurationFile>
+                </analysisConfigurationFiles>
+              </configuration>
+              <!-- Run only report generation goal -->
+              <executions>
+                <execution>
+                  <!-- Disable check goal -->
+                  <id>check</id>
+                  <phase>none</phase>
+                </execution>
+                <execution>
+                  <!-- Report can be found in ${build.directory}/site/revapi-report.html -->
+                  <id>report</id>
+                  <goals>
+                    <goal>report</goal>
+                  </goals>
+                  <phase>package</phase>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </pluginManagement>
       </build>
     </profile>
     <profile>
@@ -1545,6 +1644,12 @@
       </dependency>
 
       <dependency>
+        <groupId>org.antlr</groupId>
+        <artifactId>antlr4-runtime</artifactId>
+        <version>${version.org.antlr4}</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.apache.xmlgraphics</groupId>
         <artifactId>xmlgraphics-commons</artifactId>
         <version>${version.org.apache.xmlgraphics.commons}</version>
@@ -1560,6 +1665,13 @@
             <artifactId>guice</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jacoco</groupId>
+        <artifactId>org.jacoco.agent</artifactId>
+        <version>${version.jacoco.plugin}</version>
+        <classifier>runtime</classifier>
       </dependency>
 
       <!-- Errai (needed for Guice exclusion) -->
@@ -1992,6 +2104,19 @@
         <artifactId>resteasy-jackson2-provider</artifactId>
         <version>${version.org.jboss.resteasy}</version>
       </dependency>
+
+      <!-- CSS parsing library from Apache used by Stunner. -->
+      <dependency>
+        <groupId>net.sourceforge.cssparser</groupId>
+        <artifactId>cssparser</artifactId>
+        <version>${version.net.sourceforge.cssparser}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.w3c.css</groupId>
+        <artifactId>sac</artifactId>
+        <version>${version.org.w3c.css.sac}</version>
+      </dependency>
+
     </dependencies>
 
   </dependencyManagement>
